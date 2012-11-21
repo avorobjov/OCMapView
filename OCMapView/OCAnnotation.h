@@ -14,32 +14,30 @@
  Objects of this class will be returned by the delegate method of OCMapView "viewForAnnotation".
  Implements MKAnnotation protocol.
  */
-@interface OCAnnotation : NSObject <MKAnnotation, OCGrouping>{
-    NSMutableArray *annotationsInCluster;
-    NSString *title;
-    NSString *subtitle;
-    NSString *_groupTag;
-    CLLocationCoordinate2D coordinate;
+@interface OCAnnotation : NSObject <MKAnnotation, OCGrouping>
+{
+@private
+    NSMutableArray *_annotationsInCluster;
 }
-//
-// Constructors
-/// Standard initializer
-- (id)init;
 
-/// Init with annotations.
-/** Init object with containing annotations*/
-- (id)initWithAnnotation:(id <MKAnnotation>) annotation;
+// MKAnnotation implementation
+@property (copy, nonatomic) NSString *title;
+@property (copy, nonatomic) NSString *subtitle;
+@property (assign, nonatomic) CLLocationCoordinate2D coordinate;
+
+// OCGrouping implementation
+@property (copy, nonatomic) NSString *groupTag;
 
 //
 /// List of annotations in the cluster.
 /** Returns all annotations in the cluster.
  READONLY
  */
-@property(nonatomic, readonly) NSArray *annotationsInCluster;
-//
-/// List of annotations in the cluster.
-/** @See annotationsInCluster property*/
-- (NSArray *)annotationsInCluster;
+@property (strong, nonatomic, readonly) NSArray *annotationsInCluster;
+
+/// Init with annotations.
+/** Init object with containing annotations*/
+- (id)initWithAnnotation:(id <MKAnnotation>) annotation;
 
 //
 // manipulate cluster
@@ -59,28 +57,5 @@
 /// Removes multiple annotations from the Cluster.
 /** Removes multiple annotations from the cluster and sets the title to the number of containing annotations.*/
 - (void)removeAnnotations:(NSArray *)annotations;
-
-//
-// protocol implementation
-/// Get the Title of the cluster.
-- (NSString *)title;
-/// Set the Title of the cluster.
-- (void)setTitle:(NSString *)text;
-
-
-/// Get the Subtitle of the cluster.
-- (NSString *)subtitle;
-/// Set the Subitle of the cluster.
-- (void)setSubtitle:(NSString *)text;
-
-/// Get the GroupTag of the cluster.
-- (NSString *)groupTag;
-/// Set the GroupTag of the cluster.
-- (void)setGroupTag:(NSString *)tag;
-
-/// Get the coordinate of the cluster.
-- (CLLocationCoordinate2D)coordinate;
-/// Set the coordinate of the cluster.
-- (void)setCoordinate:(CLLocationCoordinate2D)coord;
 
 @end

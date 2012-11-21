@@ -58,19 +58,19 @@
 //
 /// The complete list of annotations associated with the receiver. (read-only)
 /** The objects in this array must adopt the @see MKAnnotation protocol. If no annotations are associated with the map view, the value of this property is nil.*/
-@property(nonatomic, readonly) NSArray *annotations;
+@property(unsafe_unretained, nonatomic, readonly) NSArray *annotations;
 - (NSArray *)annotations;
 
 //
 /// List of annotations which will be ignored by the clustering algorithm.
 /** The objects in this array must adopt the @see MKAnnotation protocol.
  The clustering algorithms will automatically ignore this annotations.*/
-@property(nonatomic, retain) NSMutableSet *annotationsToIgnore;
+@property(nonatomic, strong) NSMutableSet *annotationsToIgnore;
 
 //
 /// The complete list of annotations displayed on the map including clusters (read-only).
 /** The objects in this array must adopt the @see MKAnnotation protocol. It contains all annotations as they are on the MapView.*/
-@property(nonatomic, readonly) NSArray *displayedAnnotations;
+@property(unsafe_unretained, nonatomic, readonly) NSArray *displayedAnnotations;
 - (NSArray *)displayedAnnotations;
 
 //
@@ -122,6 +122,6 @@ default: 0.2*/
 
 /// Filters annotations for visibleMapRect.
 /** This method filters the annotations for the visibleMapRect.*/
-- (NSArray *)filterAnnotationsForVisibleMap:(NSArray *)annotationsToFilter;
+- (NSMutableArray *)filterAnnotationsForVisibleMap:(NSSet *)annotationsToFilter;
 
 @end

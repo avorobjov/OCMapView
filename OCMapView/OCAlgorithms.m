@@ -15,91 +15,64 @@
 
 #pragma mark - bubbleClustering
 
++ (NSArray *)_openTrivialClustersInArray:(NSArray *)clusteredAnnotations
+{
+    NSMutableArray *returnArray = [[NSMutableArray alloc] init];
+
+    // whipe all empty or single annotations
+    for (OCAnnotation *anAnnotation in clusteredAnnotations) {
+        if ([anAnnotation.annotationsInCluster count] <= 1) {
+            [returnArray addObject:[anAnnotation.annotationsInCluster lastObject]];
+        }
+        else {
+            [returnArray addObject:anAnnotation];
+        }
+    }
+
+    return returnArray;
+}
+
 // Bubble clustering with iteration
-+ (NSArray*) bubbleClusteringWithAnnotations:(NSArray *) annotationsToCluster andClusterRadius:(CLLocationDistance)radius grouped:(BOOL) grouped{
-    
-    // memory
-    [annotationsToCluster retain];
-    
-    // return array
++ (NSArray *)bubbleClusteringWithAnnotations:(NSArray *)annotationsToCluster andClusterRadius:(CLLocationDistance)radius grouped:(BOOL)grouped {
     NSMutableArray *clusteredAnnotations = [[NSMutableArray alloc] init];
     
 	// Clustering
 	for (id <MKAnnotation> annotation in annotationsToCluster) {
 		// flag for cluster
 		BOOL isContaining = NO;
-		
-		// If it's the first one, add it as new cluster annotation
-		if([clusteredAnnotations count] == 0){
+
+        for (OCAnnotation *clusterAnnotation in clusteredAnnotations) {
+            // If the annotation is in range of the Cluster add it to it
+            if (isLocationNearToOtherLocation([annotation coordinate], [clusterAnnotation coordinate], radius)){
+                // check group
+                if (grouped && [annotation respondsToSelector:@selector(groupTag)]) {
+                    if (![clusterAnnotation.groupTag isEqualToString:((id <OCGrouping>)annotation).groupTag])
+                        continue;
+                }
+
+                isContaining = YES;
+                [clusterAnnotation addAnnotation:annotation];
+                break;
+            }
+        }
+
+        // If the annotation is not in a Cluster make it to a new one
+        if (!isContaining) {
             OCAnnotation *newCluster = [[OCAnnotation alloc] initWithAnnotation:annotation];
-            [clusteredAnnotations addObject:newCluster];
+            if (newCluster) [clusteredAnnotations addObject:newCluster];
             
             // check group
             if (grouped && [annotation respondsToSelector:@selector(groupTag)]) {
                 newCluster.groupTag = ((id <OCGrouping>)annotation).groupTag;
-            }
-            
-            [newCluster release];
-		}
-		else {
-            for (OCAnnotation *clusterAnnotation in clusteredAnnotations) {
-                // If the annotation is in range of the Cluster add it to it
-                if(isLocationNearToOtherLocation([annotation coordinate], [clusterAnnotation coordinate], radius)){
-                    
-                    // check group
-                    if (grouped && [annotation respondsToSelector:@selector(groupTag)]) {
-                        if (![clusterAnnotation.groupTag isEqualToString:((id <OCGrouping>)annotation).groupTag])
-                            continue;
-                    }
-                    
-					isContaining = YES;
-					[clusterAnnotation addAnnotation:annotation];
-					break;
-				}
-            }
-            
-            // If the annotation is not in a Cluster make it to a new one
-			if (!isContaining){
-				OCAnnotation *newCluster = [[OCAnnotation alloc] initWithAnnotation:annotation];
-				[clusteredAnnotations addObject:newCluster];
-                
-                // check group
-                if (grouped && [annotation respondsToSelector:@selector(groupTag)]) {
-                    newCluster.groupTag = ((id <OCGrouping>)annotation).groupTag;
-                }
-                
-                [newCluster release];
 			}
 		}
 	}
-    
-    NSMutableArray *returnArray = [[NSMutableArray alloc] init];
-    
-    // whipe all empty or single annotations
-    for (OCAnnotation *anAnnotation in clusteredAnnotations) {
-        if ([anAnnotation.annotationsInCluster count] <= 1) {
-            [returnArray addObject:[anAnnotation.annotationsInCluster lastObject]];
-        }
-        else{
-            [returnArray addObject:anAnnotation];
-        }
-    }
-    
-    // memory
-    [annotationsToCluster release];
-    [clusteredAnnotations release];
-    
-    return [returnArray autorelease];
+
+    return [self _openTrivialClustersInArray:clusteredAnnotations];
 }
 
-
 // Grid clustering with predefined size
-+ (NSArray*) gridClusteringWithAnnotations:(NSArray *) annotationsToCluster andClusterRect:(MKCoordinateSpan)tileRect grouped:(BOOL) grouped{
-    
-    // memory
-    [annotationsToCluster retain];
-    
-    // return array
++ (NSArray *) gridClusteringWithAnnotations:(NSArray *) annotationsToCluster andClusterRect:(MKCoordinateSpan)tileRect grouped:(BOOL) grouped {
     NSMutableDictionary *clusteredAnnotations = [[NSMutableDictionary alloc] init];
     
     // iterate through all annotations
@@ -109,11 +82,10 @@
         int row = ([annotation coordinate].longitude+180.0)/tileRect.longitudeDelta;
         int column = ([annotation coordinate].latitude+90.0)/tileRect.latitudeDelta;
         
-        NSString *key = [NSString stringWithFormat:@"%d%d",row,column];
-        
+        NSString *key = [NSString stringWithFormat:@"%d%d", row, column];
         
         // get the cluster for the calculated coordinates
-        OCAnnotation *clusterAnnotation = [[clusteredAnnotations objectForKey:key] retain];
+        OCAnnotation *clusterAnnotation = [clusteredAnnotations objectForKey:key];
         
         // if there is none, create one
         if (clusterAnnotation == nil) {
@@ -134,34 +106,15 @@
         // check group
         if (grouped && [annotation respondsToSelector:@selector(groupTag)]) {
             if (![clusterAnnotation.groupTag isEqualToString:((id <OCGrouping>)annotation).groupTag]){
-                [clusterAnnotation release];
                 continue;
             }
         }
         
         // add annotation to the cluster
         [clusterAnnotation addAnnotation:annotation];
-        [clusterAnnotation release];
 	}
     
-    // return array
-    NSMutableArray *returnArray = [[NSMutableArray alloc] init];
-    
-    // whipe all empty or single annotations
-    for (OCAnnotation *anAnnotation in [clusteredAnnotations allValues]) {
-        if ([anAnnotation.annotationsInCluster count] <= 1) {
-            [returnArray addObject:[anAnnotation.annotationsInCluster lastObject]];
-        }
-        else{
-            [returnArray addObject:anAnnotation];
-        }
-    }
-    
-    // memory
-    [annotationsToCluster release];
-    [clusteredAnnotations release];
-    
-    return [returnArray autorelease];
+    return [self _openTrivialClustersInArray:[clusteredAnnotations allValues]];
 }
 
 @end

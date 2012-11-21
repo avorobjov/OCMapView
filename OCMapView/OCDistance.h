@@ -12,6 +12,7 @@
  @brief calculates the distance between two given coordinates.
  */
 CLLocationDistance getDistance(CLLocationCoordinate2D firstLocation, CLLocationCoordinate2D secondLocation);
+CLLocationDistance getDistance2(CLLocationCoordinate2D firstLocation, CLLocationCoordinate2D secondLocation);
 
 /** @fn BOOL isLocationNearToOtherLocation(CLLocationCoordinate2D firstLocation, CLLocationCoordinate2D secondLocation, CLLocationDistance distanceInGeoCoordinates)
  @brief determines either two locations are near or not.
